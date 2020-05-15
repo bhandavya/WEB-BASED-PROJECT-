@@ -1,8 +1,13 @@
 <?php
+include_once "session.php";
+include_once "checklogin.php";
+include_once "DB.php";
+include_once "helpers.php";
 
-require_once 'session.php';
-require_once 'DB.php';
-require_once 'helpers.php';
+if (!check()) {
+    header('Location: logout.php');
+    exit();
+}
 
 if (isset($_POST['register'])) {
     $input = clean($_POST);
@@ -25,16 +30,19 @@ if (isset($_POST['register'])) {
         exit();
     }
 
-    $isProviderCreated = DB::query("INSERT INTO providers values(DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-            $name,$contact,$descr,$adder1,$adder2,$city,$password,$file1, $profession
-        ]);
+    $isProviderCreated = DB::query(
+        "UPDATE providers SET name=?, contact=?, adder1=?, adder2=?, city=?, photo=?, descr=?, password=?, profession=? WHERE id=?",
+        [$name,$contact,$adder1,$adder2,$city,$file1, $descr, $password, $profession,$_SESSION['user']->id]
+    );
 
     if ($isProviderCreated) {
-        header('Location: ../register.php?msg=success');
+        unlink($_SESSION['user']->photo);
+        header('Location: ../logout.php');
         exit();
     } else {
         unlink('../storage/'.$file1);
-        header('Location: ../register.php?msg=failed');
+        echo "";
+        header('Location: ../logout.php');
         exit();
     }
 }
